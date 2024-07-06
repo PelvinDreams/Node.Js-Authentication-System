@@ -8,7 +8,21 @@ const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_P
 
 const pool = new Pool({
   connectionString: isProduction ? process.env.DATABASE_URL : connectionString,
-  ssl: isProduction
+  ssl: isProduction ? { rejectUnauthorized: false } : false
+});
+
+// Test the connection
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error('Error acquiring client', err.stack);
+  }
+  client.query('SELECT NOW()', (err, result) => {
+    release();
+    if (err) {
+      return console.error('Error executing query', err.stack);
+    }
+    console.log(result.rows);
+  });
 });
 
 module.exports = { pool };
